@@ -6,8 +6,8 @@
   <meta name="google-site-verification" content="ao-F3lDZbS682FtS97r4io-MEHW1EhwTSx39CFQGhtg" />
 
   <!-- グローバル・多言語SEO向けタイトル＆説明文 -->
-  <title>ドパ描き | DopamineDraw - Realtime Online Pixel Canvas (No Cooldown Pixel Art)</title>
-  <meta name="description" content="待機時間なしで遊べる多人数参加型オンラインピクセルキャンバス「ドパ描き (DopamineDraw)」。Free realtime collaborative pixel art canvas with no cooldown time. Draw dot art together live!">
+  <title data-i18n="doc_title">ドパ描き | DopamineDraw - Realtime Online Pixel Canvas</title>
+  <meta name="description" id="metaDesc" content="待機時間なしで遊べる多人数参加型オンラインピクセルキャンバス「ドパ描き (DopamineDraw)」。Free realtime collaborative pixel art canvas with no cooldown time. Draw dot art together live!">
   <meta name="keywords" content="ドパ描き, DopamineDraw, ドーパミンドロー, dopagaki, ピクセルキャンバス, pixel canvas, online pixel art, r/place alternative, no cooldown pixel canvas, ドット絵 共有, リアルタイム お絵かき">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="canonical" href="https://keitagames.com">
@@ -37,7 +37,7 @@
   <meta name="twitter:image" content="https://keitagames.com/ogp.png">
   <meta name="twitter:site" content="@keita_sprint">
 
-  <!-- 構造化データ (JSON-LD) 拡張版 -->
+  <!-- 構造化データ (JSON-LD) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -63,148 +63,214 @@
   }
   </script>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
   <style>
     :root {
-      --bg: #000000; --fg: #1b1b1b; --bar: #ffffff; --line: #cfcfc8;
+      --view: #000000;
+      --panel: #e4e8f2; --panel2: #ffffff; --field: #f6f8fc;
+      --ink: #1b1d2e; --edge: #1b1d2e; --shade: #a7b0c8;
+      --accent: #0f7ff6; --accent-ink: #1b1d2e;
+      --focus: #2b44d9; --name: #2b44d9;
+      --ok: #2fbf5b; --ng: #e0434f;
+      --outline: -3px 0 0 0 var(--edge), 3px 0 0 0 var(--edge), 0 -3px 0 0 var(--edge), 0 3px 0 0 var(--edge);
+      --drop: 6px 6px 0 3px rgba(0,0,0,0.35);
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #000000; --fg: #e8e8e8; --bar: #2a2c2f; --line: #44474b; }
+      :root {
+        --panel: #2b2b2b; --panel2: #434343; --field: #232323;
+        --ink: #eef1ff; --edge: #ffffff; --shade: #151515;
+        --focus: #ffcf33; --name: #ffcf33;
+      }
     }
     html, body { height: 100%; margin: 0; overflow: hidden; user-select: none; -webkit-user-select: none; }
     body {
-      background: var(--bg); color: var(--fg);
-      font: 14px/1.4 system-ui, sans-serif;
+      background: var(--view); color: var(--ink);
+      font: 16px/1.4 'DotGothic16', ui-monospace, 'MS Gothic', monospace;
+      -webkit-font-smoothing: none;
       display: flex; flex-direction: column;
     }
+    b { font-weight: 400; }
+    i { font-style: normal; }
+    button, input, select { font: inherit; }
 
     /* SEO・アクセシビリティ用スクリーンリーダー専用スタイル */
     .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
     }
 
+    /* ---- キャンバス領域 ---- */
     #view {
       flex: 1; position: relative; overflow: hidden; cursor: grab;
-      touch-action: none; background: #000000;
+      touch-action: none; background-color: var(--view);
+      background-image:
+        linear-gradient(45deg, #13131f 25%, transparent 25%, transparent 75%, #13131f 75%),
+        linear-gradient(45deg, #13131f 25%, transparent 25%, transparent 75%, #13131f 75%);
+      background-size: 16px 16px; background-position: 0 0, 8px 8px;
     }
     #view:active { cursor: grabbing; }
     canvas {
       position: absolute; top: 0; left: 0;
       display: block; background: #fff;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: -moz-crisp-edges;
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      box-shadow: 0 0 12px rgba(0,0,0,0.15);
+      -ms-interpolation-mode: nearest-neighbor;
+      box-shadow: 0 0 0 3px #8d96d6, 9px 9px 0 3px rgba(0,0,0,0.5);
       transform-origin: 0 0;
     }
-    #ov {
-      background: transparent; box-shadow: none;
-      image-rendering: auto; width: 100%; height: 100%;
-      pointer-events: none;
+    #ov { background: transparent; box-shadow: none; image-rendering: auto; width: 100%; height: 100%; pointer-events: none; }
+
+    /* ---- 共通パーツ ---- */
+    .pbtn {
+      position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      height: 36px; min-width: 36px; padding: 0 14px; margin: 0; box-sizing: border-box;
+      border: 0; border-radius: 0; cursor: pointer;
+      background: var(--panel2); color: var(--ink);
+      box-shadow: var(--outline), inset 0 -3px 0 0 var(--shade);
     }
+    .pbtn svg { display: block; fill: currentColor; shape-rendering: crispEdges; pointer-events: none; }
+    @media (hover: hover) { .pbtn:hover { background: var(--accent); color: var(--accent-ink); } }
+    .pbtn:active { transform: translateY(3px); box-shadow: var(--outline); }
+    .pbtn[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+    .pbtn:disabled { opacity: 0.5; cursor: default; }
+    .pbtn-s { height: 28px; min-width: 28px; padding: 0; }
+    .pbtn:focus-visible, .pinput:focus-visible, .link:focus-visible, #pal button:focus-visible {
+      outline: 3px dashed var(--focus); outline-offset: 5px;
+    }
+
+    .pinput {
+      display: block; width: 100%; min-width: 0; height: 36px; box-sizing: border-box; padding: 0 10px;
+      border: 0; border-radius: 0; font-size: 16px;
+      background: var(--field); color: var(--ink);
+      box-shadow: var(--outline), inset 0 3px 0 0 var(--shade);
+      user-select: text; -webkit-user-select: text;
+    }
+    .pinput::placeholder { color: var(--ink); opacity: 0.45; }
+    select.pinput { appearance: none; -webkit-appearance: none; padding-right: 34px; cursor: pointer; text-overflow: ellipsis; }
+    .psel { position: relative; }
+    .psel::after {
+      content: ''; position: absolute; right: 12px; top: 50%; width: 12px; height: 6px; margin-top: -3px;
+      background: var(--ink); pointer-events: none;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h6v1H0zM1 1h4v1H1zM2 2h2v1H2z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+              mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 6 3' shape-rendering='crispEdges'%3E%3Cpath d='M0 0h6v1H0zM1 1h4v1H1zM2 2h2v1H2z'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    }
+
+    /* ---- 下部バー ---- */
     #bar {
-      background: var(--bar); border-top: 1px solid var(--line);
-      padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
-      display: flex; flex-direction: column; gap: 8px; z-index: 10;
+      background: var(--panel); border-top: 4px solid var(--edge);
+      padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+      display: flex; flex-direction: column; gap: 14px; z-index: 10;
     }
     #pal {
-      display: grid;
-      grid-template-columns: repeat(16, 1fr);
-      gap: 3px;
-      max-height: 120px;
-      overflow-y: auto;
+      display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px;
+      max-height: 104px; overflow-y: auto; padding: 8px;
+      background: var(--field); box-shadow: var(--outline), inset 0 3px 0 0 var(--shade);
     }
-    @media (max-width: 600px) {
-      #pal { grid-template-columns: repeat(8, 1fr); max-height: 110px; }
-    }
+    @media (max-width: 600px) { #pal { grid-template-columns: repeat(8, 1fr); max-height: 96px; } }
     #pal button {
-      aspect-ratio: 1; border: 2px solid transparent; border-radius: 3px;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.15); cursor: pointer; padding: 0;
+      aspect-ratio: 1; border: 0; border-radius: 0; padding: 0; cursor: pointer;
+      box-shadow: inset 2px 2px 0 0 rgba(255,255,255,0.28), inset -2px -2px 0 0 rgba(0,0,0,0.28);
     }
     #pal button[aria-pressed="true"] {
-      border-color: var(--fg);
-      box-shadow: 0 0 0 2px var(--bar), 0 0 0 4px var(--fg);
+      box-shadow: inset 2px 2px 0 0 rgba(255,255,255,0.28), inset -2px -2px 0 0 rgba(0,0,0,0.28),
+                  0 0 0 2px var(--field), 0 0 0 5px var(--ink);
       z-index: 1;
     }
-    #pal button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-    #info { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    #info .status-box { flex: 1; min-width: 140px; font-size: 13px; display: flex; align-items: center; gap: 4px; }
-    #info .controls { display: flex; align-items: center; gap: 6px; }
-    #info button, #info select {
-      height: 32px; border: 1px solid var(--line); border-radius: 4px;
-      background: var(--bar); color: var(--fg); font-size: 14px; cursor: pointer;
-      box-sizing: border-box;
+    #info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 0 3px; }
+    #info .status-box { flex: 1; min-width: 120px; display: flex; align-items: center; gap: 8px; }
+    #pos { opacity: 0.7; margin-left: 4px; }
+    #info .controls { display: flex; align-items: center; gap: 12px; }
+    #dot, #chatDot {
+      display: inline-block; width: 10px; height: 10px; flex-shrink: 0; background: var(--ng);
+      box-shadow: -2px 0 0 0 var(--edge), 2px 0 0 0 var(--edge), 0 -2px 0 0 var(--edge), 0 2px 0 0 var(--edge);
+      margin: 0 2px;
     }
-    #info select { padding: 0 6px; max-width: 150px; text-overflow: ellipsis; }
-    #info button { min-width: 32px; padding: 0 8px; font-size: 15px; }
-    #info button:hover, #info select:hover { background: var(--bg); }
-    #dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c33; margin-right: 4px; flex-shrink: 0; }
-    #dot.on { background: #2a9d4b; }
+    #dot.on, #chatDot.on { background: var(--ok); }
+    #dot:not(.on) { animation: blink 1s steps(1) infinite; }
+    @keyframes blink { 50% { opacity: 0.35; } }
 
     /* ---- チャット ---- */
-    #chatBtn { position: relative; }
     #chatBadge {
-      position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px;
-      padding: 0 4px; box-sizing: border-box; border-radius: 8px;
-      background: #d32f2f; color: #fff; font-size: 10px; line-height: 16px; text-align: center;
+      position: absolute; top: -11px; right: -11px; min-width: 20px; height: 20px;
+      padding: 0 4px; box-sizing: border-box; background: var(--ng); color: #fff;
+      font-size: 12px; line-height: 20px; text-align: center; z-index: 1;
+      box-shadow: -2px 0 0 0 var(--edge), 2px 0 0 0 var(--edge), 0 -2px 0 0 var(--edge), 0 2px 0 0 var(--edge);
     }
     #chatBadge[hidden] { display: none; }
     #chat {
-      position: fixed; left: 8px; bottom: calc(var(--bar-h, 150px) + 8px);
-      width: min(360px, calc(100% - 16px)); max-height: min(40vh, 320px);
+      position: fixed; left: 14px; bottom: calc(var(--bar-h, 150px) + 16px);
+      width: min(360px, calc(100% - 28px)); max-height: min(40vh, 320px);
       display: flex; flex-direction: column; z-index: 5;
-      background: var(--bar);
-      background: color-mix(in srgb, var(--bar) 90%, transparent);
-      color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3); overflow: hidden;
+      background: var(--panel); color: var(--ink);
+      box-shadow: var(--outline), var(--drop);
     }
     #chat[hidden] { display: none; }
     #chatHead {
-      display: flex; align-items: center; gap: 6px; padding: 4px 8px;
-      border-bottom: 1px solid var(--line); font-size: 12px;
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+      background: var(--accent); color: var(--accent-ink);
     }
-    #chatDot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #c33; flex-shrink: 0; }
-    #chatDot.on { background: #2a9d4b; }
-    #chatState { flex: 1; min-width: 0; opacity: 0.75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #chatHead button {
-      border: 0; background: transparent; color: var(--fg); cursor: pointer;
-      font-size: 12px; padding: 2px 4px; max-width: 120px;
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    #chatState { flex: 1; min-width: 0; opacity: 0.7; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .link {
+      border: 0; background: transparent; color: inherit; cursor: pointer; padding: 2px 4px;
+      max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px;
     }
     #chatLog {
       flex: 1; min-height: 60px; overflow-y: auto; overscroll-behavior: contain;
-      padding: 6px 8px; font-size: 13px; line-height: 1.45; word-break: break-word;
+      padding: 8px 10px; line-height: 1.5; word-break: break-word;
       user-select: text; -webkit-user-select: text;
     }
-    #chatLog .t { opacity: 0.5; font-size: 11px; margin-right: 6px; }
-    #chatLog b { margin-right: 6px; }
-    #chatForm { display: flex; gap: 6px; padding: 6px; border-top: 1px solid var(--line); }
-    #chatInput {
-      flex: 1; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 8px;
-      border: 1px solid var(--line); border-radius: 4px;
-      background: var(--bar); color: var(--fg); font-size: 16px;
-      user-select: text; -webkit-user-select: text;
+    #chatLog .t { opacity: 0.5; font-size: 12px; margin-right: 8px; }
+    #chatLog b { margin-right: 8px; color: var(--name); }
+    #chatForm { display: flex; gap: 12px; padding: 12px; border-top: 3px solid var(--edge); }
+    #chatInput { flex: 1; }
+
+    /* ---- 設定モーダル ---- */
+    #settings, #verify {
+      position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center;
+      padding: 20px; box-sizing: border-box;
+      background: conic-gradient(rgba(5,5,15,0.78) 25%, rgba(5,5,15,0.4) 0 50%, rgba(5,5,15,0.78) 0 75%, rgba(5,5,15,0.4) 0) 0 0 / 4px 4px;
     }
-    #chatSend {
-      height: 32px; padding: 0 12px; border: 1px solid var(--line); border-radius: 4px;
-      background: var(--bar); color: var(--fg); font-size: 14px; cursor: pointer;
+    #settings[hidden], #verify[hidden] { display: none; }
+    .dialog {
+      width: min(420px, 100%); max-height: 100%; overflow-y: auto; overscroll-behavior: contain;
+      background: var(--panel); color: var(--ink);
+      box-shadow: var(--outline), 9px 9px 0 3px rgba(0,0,0,0.45);
+      animation: pop 0.2s steps(4);
     }
-    #chatSend:disabled { opacity: 0.5; cursor: default; }
+    @keyframes pop { from { transform: translateY(14px); } to { transform: none; } }
+    .dlg-head {
+      position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px 10px 16px; background: var(--accent); color: var(--accent-ink); font-size: 18px;
+    }
+    .dlg-body { display: flex; flex-direction: column; gap: 26px; padding: 22px 20px 24px; }
+    .field { display: flex; flex-direction: column; gap: 12px; }
+    .lbl { font-size: 14px; opacity: 0.8; }
+    .seg { display: flex; gap: 12px; }
+    .seg .pbtn { flex: 1; }
+    .row { display: flex; align-items: center; gap: 14px; }
+    #tsBox { min-height: 65px; }
+    #serverMsg, #verifyMsg { font-size: 13px; color: var(--ng); min-width: 0; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dialog, #dot { animation: none; }
+      .pbtn:active { transform: none; }
+    }
   </style>
 </head>
 <body>
 
 <!-- 検索エンジンクローラー用テキスト（SEO評価向上） -->
 <header class="sr-only">
-  <h1>ドパ描き | DopamineDraw - Realtime Online Pixel Canvas</h1>
-  <p>待機時間のない現代的なオンラインピクセルキャンバス「ドパ描き」。無料でリアルタイムにドット絵を描いてみんなで共有しよう！</p>
-  <p>DopamineDraw is a free realtime collaborative pixel art canvas with no cooldown time. Draw pixel art together with people worldwide in real time!</p>
+  <h1 data-i18n="header_h1">ドパ描き | DopamineDraw - Realtime Online Pixel Canvas</h1>
+  <p data-i18n="header_p1">待機時間のない現代的なオンラインピクセルキャンバス「ドパ描き」。無料でリアルタイムにドット絵を描いてみんなで共有しよう！</p>
+  <p data-i18n="header_p2">DopamineDraw is a free realtime collaborative pixel art canvas with no cooldown time. Draw pixel art together with people worldwide in real time!</p>
 </header>
 
 <main id="view">
@@ -216,15 +282,13 @@
   <div id="pal"></div>
   <div id="info">
     <div class="status-box">
-      <i id="dot"></i><b id="status">接続中</b> <span id="pos" style="margin-left:6px;">-</span>
+      <i id="dot"></i><b id="status">接続中</b><span id="pos">-</span>
     </div>
     <div class="controls">
-      <!-- サーバー選択UI -->
-      <select id="serverSelect" aria-label="サーバー選択"></select>
-      <button id="addServerBtn" title="サーバーURLを追加">＋URL</button>
-      <button id="chatBtn" aria-label="チャット">💬<span id="chatBadge" hidden></span></button>
-      <button id="zout" aria-label="縮小">－</button>
-      <button id="zin" aria-label="拡大">＋</button>
+      <button id="chatBtn" class="pbtn" data-i18n-attr="aria-label:chat_btn_aria"><svg width="20" height="18" viewBox="0 0 10 9" aria-hidden="true"><path d="M1 0h8v1H1zM0 1h10v4H0zM1 5h8v1H1zM2 6h2v1H2zM2 7h1v1H2z"/></svg><span id="chatBadge" hidden></span></button>
+      <button id="zout" class="pbtn" data-i18n-attr="aria-label:zoom_out"><svg width="16" height="16" viewBox="0 0 8 8" aria-hidden="true"><path d="M1 3h6v2H1z"/></svg></button>
+      <button id="zin" class="pbtn" data-i18n-attr="aria-label:zoom_in"><svg width="16" height="16" viewBox="0 0 8 8" aria-hidden="true"><path d="M1 3h6v2H1zM3 1h2v6H3z"/></svg></button>
+      <button id="settingsBtn" class="pbtn" data-i18n-attr="aria-label:settings_btn_aria,title:settings_btn_aria"><svg width="18" height="18" viewBox="0 0 9 9" aria-hidden="true"><path d="M3 0h3v1H3zM1 1h1v1H1zM3 1h3v1H3zM7 1h1v1H7zM2 2h5v1H2zM0 3h3v3H0zM6 3h3v3H6zM2 6h5v1H2zM1 7h1v1H1zM3 7h3v1H3zM7 7h1v1H7zM3 8h3v1H3z"/></svg></button>
     </div>
   </div>
 </div>
@@ -232,37 +296,259 @@
 <!-- チャットパネル -->
 <div id="chat" hidden>
   <div id="chatHead">
-    <i id="chatDot"></i><b>チャット</b>
+    <i id="chatDot"></i><b data-i18n="chat_header">チャット</b>
     <span id="chatState"></span>
-    <button id="chatName" title="名前を変更">名無し ✎</button>
-    <button id="chatClose" aria-label="閉じる">×</button>
+    <button id="chatName" class="link" data-i18n-attr="title:chat_change_name">名無し</button>
+    <button id="chatClose" class="pbtn pbtn-s" data-i18n-attr="aria-label:chat_close"><svg width="14" height="14" viewBox="0 0 7 7" aria-hidden="true"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z"/></svg></button>
   </div>
   <div id="chatLog" aria-live="polite"></div>
   <div id="chatForm">
-    <input id="chatInput" type="text" maxlength="200" placeholder="メッセージを入力" autocomplete="off" enterkeyhint="send">
-    <button id="chatSend">送信</button>
+    <input id="chatInput" class="pinput" type="text" maxlength="200" data-i18n-attr="placeholder:chat_placeholder" autocomplete="off" enterkeyhint="send">
+    <button id="chatSend" class="pbtn" data-i18n="chat_send">送信</button>
+  </div>
+</div>
+
+<!-- 設定モーダル -->
+<div id="settings" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="dlg-head">
+      <b id="settingsTitle" data-i18n="settings_title">設定</b>
+      <button id="settingsClose" class="pbtn pbtn-s" data-i18n-attr="aria-label:settings_close"><svg width="14" height="14" viewBox="0 0 7 7" aria-hidden="true"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z"/></svg></button>
+    </div>
+    <div class="dlg-body">
+      <div class="field">
+        <span class="lbl" data-i18n="setting_lang">言語</span>
+        <div class="seg" role="group" data-i18n-attr="aria-label:setting_lang">
+          <button class="pbtn" data-lang="ja" aria-pressed="false">日本語</button>
+          <button class="pbtn" data-lang="en" aria-pressed="false">English</button>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="serverSelect" data-i18n="setting_server">サーバー</label>
+        <div class="psel"><select id="serverSelect" class="pinput"></select></div>
+      </div>
+      <div class="field">
+        <span class="lbl" data-i18n="setting_add_server">サーバーを追加</span>
+        <input id="serverUrlInput" class="pinput" type="url" inputmode="url" autocomplete="off" placeholder="https://example.com/place.cgi">
+        <input id="serverNameInput" class="pinput" type="text" maxlength="40" autocomplete="off" data-i18n-attr="placeholder:server_name_placeholder">
+        <div class="row">
+          <button id="addServerBtn" class="pbtn" data-i18n="server_add">追加</button>
+          <span id="serverMsg" role="status"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label class="lbl" for="nameInput" data-i18n="setting_chat_name">チャットの名前</label>
+        <input id="nameInput" class="pinput" type="text" maxlength="20" autocomplete="off">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Turnstile 認証 (セッションごとに1回) -->
+<div id="verify" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="verifyTitle">
+    <div class="dlg-head">
+      <b id="verifyTitle" data-i18n="verify_title">認証</b>
+      <button id="verifyClose" class="pbtn pbtn-s" data-i18n-attr="aria-label:settings_close"><svg width="14" height="14" viewBox="0 0 7 7" aria-hidden="true"><path d="M0 0h1v1H0zM1 1h1v1H1zM2 2h1v1H2zM3 3h1v1H3zM4 4h1v1H4zM5 5h1v1H5zM6 6h1v1H6zM6 0h1v1H6zM5 1h1v1H5zM4 2h1v1H4zM2 4h1v1H2zM1 5h1v1H1zM0 6h1v1H0z"/></svg></button>
+    </div>
+    <div class="dlg-body">
+      <div id="tsBox"></div>
+      <span id="verifyMsg" role="status"></span>
+    </div>
   </div>
 </div>
 
 <script>
-// ブラウザ言語に応じたメタ情報の動的最適化
-(function optimizeForLanguage() {
-  const userLang = navigator.language || navigator.userLanguage;
-  if (userLang && !userLang.startsWith('ja')) {
-    document.documentElement.lang = 'en';
-    document.title = "DopamineDraw - Realtime Online Pixel Canvas (No Cooldown)";
+// ---- 多言語対応 (i18n) 定義 ----
+const TRANSLATIONS = {
+  ja: {
+    doc_title: "ドパ描き | DopamineDraw - Realtime Online Pixel Canvas (No Cooldown Pixel Art)",
+    meta_desc: "待機時間なしで遊べる多人数参加型オンラインピクセルキャンバス「ドパ描き (DopamineDraw)」。Free realtime collaborative pixel art canvas with no cooldown time. Draw dot art together live!",
+    header_h1: "ドパ描き | DopamineDraw - Realtime Online Pixel Canvas",
+    header_p1: "待機時間のない現代的なオンラインピクセルキャンバス「ドパ描き」。無料でリアルタイムにドット絵を描いてみんなで共有しよう！",
+    header_p2: "DopamineDraw is a free realtime collaborative pixel art canvas with no cooldown time. Draw pixel art together with people worldwide in real time!",
+
+    status_connecting: "接続中...",
+    status_live: "ライブ",
+    status_reconnecting: "再接続中",
+    status_failed: "接続失敗",
+
+    server_select: "サーバー選択",
+    add_server_btn: "＋URL",
+    add_server_title: "サーバーURLを追加",
+    chat_btn_aria: "チャット",
+    zoom_out: "縮小",
+    zoom_in: "拡大",
+
+    settings_title: "設定",
+    settings_btn_aria: "設定",
+    settings_close: "閉じる",
+    setting_lang: "言語",
+    setting_server: "サーバー",
+    setting_add_server: "サーバーを追加",
+    server_name_placeholder: "表示名 (省略可)",
+    server_add: "追加",
+    setting_chat_name: "チャットの名前",
+
+    server_prompt_url: "追加するサーバーのURLを入力してください:\n(例: https://example.com/place.cgi)",
+    server_already_exists: "そのサーバーは既に追加されています。",
+    server_prompt_name: "サーバーの表示名を入力してください:",
+    server_external: "外部",
+
+    chat_header: "チャット",
+    chat_default_name: "名無し",
+    chat_change_name: "名前を変更",
+    chat_close: "閉じる",
+    chat_placeholder: "メッセージを入力",
+    chat_send: "送信",
+    chat_prompt_name: "チャットで表示する名前 (20文字まで):",
+    chat_cannot_connect: "接続できません",
+    chat_reconnecting: "再接続中",
+    chat_send_failed: "送信に失敗しました",
+
+    color_prefix: "色 ",
+
+    verify_title: "認証",
+    verify_failed: "認証に失敗しました。もう一度お試しください"
+  },
+  en: {
+    doc_title: "DopamineDraw - Realtime Online Pixel Canvas (No Cooldown)",
+    meta_desc: "Free realtime collaborative pixel art canvas with no cooldown time. Draw pixel art together live with people worldwide on DopamineDraw!",
+    header_h1: "DopamineDraw - Realtime Online Pixel Canvas",
+    header_p1: "A modern online pixel canvas with no cooldown time. Draw and share pixel art live for free!",
+    header_p2: "DopamineDraw is a free realtime collaborative pixel art canvas with no cooldown time. Draw pixel art together with people worldwide in real time!",
+
+    status_connecting: "Connecting...",
+    status_live: "LIVE",
+    status_reconnecting: "Reconnecting...",
+    status_failed: "Connection Failed",
+
+    server_select: "Select Server",
+    add_server_btn: "+URL",
+    add_server_title: "Add Server URL",
+    chat_btn_aria: "Chat",
+    zoom_out: "Zoom Out",
+    zoom_in: "Zoom In",
+
+    settings_title: "Settings",
+    settings_btn_aria: "Settings",
+    settings_close: "Close",
+    setting_lang: "Language",
+    setting_server: "Server",
+    setting_add_server: "Add server",
+    server_name_placeholder: "Display name (optional)",
+    server_add: "Add",
+    setting_chat_name: "Chat name",
+
+    server_prompt_url: "Enter server URL to add:\n(e.g. https://example.com/place.cgi)",
+    server_already_exists: "That server is already added.",
+    server_prompt_name: "Enter display name for this server:",
+    server_external: "External",
+
+    chat_header: "Chat",
+    chat_default_name: "Anonymous",
+    chat_change_name: "Change Name",
+    chat_close: "Close",
+    chat_placeholder: "Type a message...",
+    chat_send: "Send",
+    chat_prompt_name: "Enter display name for chat (up to 20 chars):",
+    chat_cannot_connect: "Cannot connect",
+    chat_reconnecting: "Reconnecting...",
+    chat_send_failed: "Failed to send",
+
+    color_prefix: "Color ",
+
+    verify_title: "Verification",
+    verify_failed: "Verification failed. Please try again."
   }
-})();
+};
+
+// 言語自動判定 (URLパラメータ > localStorage > ブラウザ言語)
+function detectLanguage() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramLang = urlParams.get('lang');
+  if (paramLang && TRANSLATIONS[paramLang]) return paramLang;
+
+  try {
+    const saved = localStorage.getItem('dd_lang');
+    if (saved && TRANSLATIONS[saved]) return saved;
+  } catch (e) {}
+
+  const navLang = (navigator.language || navigator.userLanguage || '').slice(0, 2);
+  return TRANSLATIONS[navLang] ? navLang : 'ja';
+}
+
+let currentLang = detectLanguage();
+
+function t(key) {
+  return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) ||
+         (TRANSLATIONS.ja && TRANSLATIONS.ja[key]) || key;
+}
+
+function updateDOMTranslations() {
+  document.documentElement.lang = currentLang;
+
+  // テキストノード更新
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key) el.textContent = t(key);
+  });
+
+  // 属性更新 (例: data-i18n-attr="placeholder:chat_placeholder,title:add_server_title")
+  document.querySelectorAll('[data-i18n-attr]').forEach(el => {
+    const pairs = el.getAttribute('data-i18n-attr').split(',');
+    pairs.forEach(pair => {
+      const [attr, key] = pair.split(':').map(s => s.trim());
+      if (attr && key) el.setAttribute(attr, t(key));
+    });
+  });
+
+  // メタタグ類
+  document.title = t('doc_title');
+  const metaDesc = document.getElementById('metaDesc');
+  if (metaDesc) metaDesc.setAttribute('content', t('meta_desc'));
+
+  // 色パレットアクセシビリティテキストの再設定
+  const pal = document.getElementById('pal');
+  if (pal) {
+    [...pal.children].forEach((b, i) => {
+      b.setAttribute('aria-label', t('color_prefix') + (i + 1));
+    });
+  }
+
+  // チャット名の再レンダリング
+  renderChatName();
+}
+
+const langBtns = [...document.querySelectorAll('[data-lang]')];
+function syncLangButtons() {
+  langBtns.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === currentLang)));
+}
+syncLangButtons();
+langBtns.forEach(b => b.addEventListener('click', () => {
+  currentLang = b.dataset.lang;
+  try { localStorage.setItem('dd_lang', currentLang); } catch (e) {}
+  syncLangButtons();
+  updateDOMTranslations();
+  updateServerDropdown();
+}));
 
 const W = 2000, H = 2000;
 
 // ---- サーバー管理 ----
 const DEFAULT_SERVERS = [
-  { name: '公式サーバー', url: 'https://keitagames.com/place.cgi' },
-  { name: 'ガチ勢向け', url: 'https://hoge.keitagames.com/alpha/place.cgi' },
-  { name: '荒らし可能', url: 'https://keitagames.com/arashi/place.cgi' },
-  { name: '練習用', url: 'https://hoge.keitagames.com/place.cgi' }
+  { name: { ja: '公式サーバー', en: 'Official Server' }, url: 'https://keitagames.com/place.cgi' },
+  { name: { ja: 'ガチ勢向け', en: 'Hardcore' }, url: 'https://hoge.keitagames.com/alpha/place.cgi' },
+  { name: { ja: '荒らし可能', en: 'Anarchy' }, url: 'https://keitagames.com/arashi/place.cgi' },
+  { name: { ja: '練習用', en: 'Sandbox' }, url: 'https://hoge.keitagames.com/place.cgi' }
 ];
+
+function getServerName(serverObj) {
+  if (typeof serverObj.name === 'object') {
+    return serverObj.name[currentLang] || serverObj.name.ja || serverObj.url;
+  }
+  return serverObj.name;
+}
 
 function getSavedServers() {
   try {
@@ -291,7 +577,7 @@ if (paramServerUrl) {
   if (!existing) {
     let name = paramServerUrl;
     try { name = new URL(paramServerUrl, location.href).hostname; } catch(e){}
-    existing = { name: `外部 (${name})`, url: paramServerUrl };
+    existing = { name: `${t('server_external')} (${name})`, url: paramServerUrl };
     servers.push(existing);
     saveServers(servers);
   }
@@ -306,7 +592,7 @@ function updateServerDropdown() {
   servers.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.url;
-    opt.textContent = s.name;
+    opt.textContent = getServerName(s);
     if (s.url === currentApi) opt.selected = true;
     serverSelect.appendChild(opt);
   });
@@ -316,31 +602,41 @@ updateServerDropdown();
 
 serverSelect.addEventListener('change', (e) => {
   currentApi = e.target.value;
+  closeSettings();
   loadAndConnectServer(currentApi);
 });
 
-addServerBtn.addEventListener('click', () => {
-  const inputUrl = prompt('追加するサーバーのURLを入力してください:\n(例: https://example.com/place.cgi)');
-  if (!inputUrl) return;
-  
-  const trimmed = inputUrl.trim();
-  if (!trimmed) return;
+const serverUrlInput = document.getElementById('serverUrlInput');
+const serverNameInput = document.getElementById('serverNameInput');
+const serverMsg = document.getElementById('serverMsg');
+
+function addServerFromForm() {
+  const trimmed = serverUrlInput.value.trim();
+  if (!trimmed) { serverUrlInput.focus(); return; }
 
   if (servers.some(s => s.url === trimmed)) {
-    alert('そのサーバーは既に追加されています。');
+    serverMsg.textContent = t('server_already_exists');
     return;
   }
 
   let defaultName = trimmed;
-  try { defaultName = new URL(trimmed, location.href).hostname || trimmed; } catch(e){}
-  const name = prompt('サーバーの表示名を入力してください:', defaultName) || defaultName;
+  try { defaultName = new URL(trimmed, location.href).hostname || trimmed; } catch (e) {}
+  const name = serverNameInput.value.trim() || defaultName;
 
   servers.push({ name, url: trimmed });
   saveServers(servers);
   currentApi = trimmed;
   updateServerDropdown();
+  serverUrlInput.value = '';
+  serverNameInput.value = '';
+  closeSettings();
   loadAndConnectServer(currentApi);
-});
+}
+addServerBtn.addEventListener('click', addServerFromForm);
+[serverUrlInput, serverNameInput].forEach(el => el.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); addServerFromForm(); }
+}));
+serverUrlInput.addEventListener('input', () => { serverMsg.textContent = ''; });
 
 
 const PAL = [
@@ -361,7 +657,8 @@ const PAL = [
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 cv.width = W; cv.height = H;
-
+ctx.imageSmoothingEnabled = false;
+ctx.webkitImageSmoothingEnabled = false;
 const view = document.getElementById('view');
 let scale = 1;
 let panX = 0, panY = 0;
@@ -427,9 +724,11 @@ function drawOverlay() {
     }
   }
 }
-
 function updateTransform() {
-  cv.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+  // transform: scale() ではなく CSS の width / height で拡大することでスマホのぼやけを完全に防ぎます
+  cv.style.width = (W * scale) + 'px';
+  cv.style.height = (H * scale) + 'px';
+  cv.style.transform = `translate(${panX}px, ${panY}px)`;
   drawOverlay();
 }
 window.addEventListener('resize', resizeOverlay);
@@ -443,13 +742,13 @@ function initView() {
   panY = (vh - H * scale) / 2;
   updateTransform();
 }
-window.addEventListener('load', () => { resizeOverlay(); initView(); });
+window.addEventListener('load', () => { resizeOverlay(); initView(); updateDOMTranslations(); });
 
 // 任意座標を中心としたズーム
 function zoomAt(cx, cy, factor) {
   const oldScale = scale;
   let newScale = scale * factor;
-  newScale = Math.min(Math.max(newScale, 0.05), 40); // 最小・最大ズーム制限
+  newScale = Math.min(Math.max(newScale, 0.05), 40);
 
   panX = cx - (cx - panX) * (newScale / oldScale);
   panY = cy - (cy - panY) * (newScale / oldScale);
@@ -567,10 +866,17 @@ function handlePointerEnd(e) {
     if (x >= 0 && x < W && y >= 0 && y < H) {
       const prev = board[y * W + x];
       const cur = color;
+      const api = currentApi;
+      const params = { a: 'place', x, y, c: cur };
+      if (proofs.has(api)) params.t = proofs.get(api);
       draw(x, y, cur);
-      fetch(currentApi, { method: 'POST', body: new URLSearchParams({ a: 'place', x, y, c: cur }) })
-        .then(r => { if (!r.ok) throw new Error(r.status); })
-        .catch(() => draw(x, y, prev));   // サーバーに保存できなかったら元に戻す
+      fetch(api, { method: 'POST', body: new URLSearchParams(params) })
+        .then(r => { if (!r.ok) { const e = new Error(r.status); e.status = r.status; throw e; } })
+        .catch((err) => {
+          draw(x, y, prev);
+          // 認証なし/期限切れ: 再認証 (Turnstile未対応の外部サーバーは403を返さないので影響なし)
+          if (err.status === 403) { proofs.delete(api); showVerify(api); }
+        });
     }
   }
   activePointers.delete(e.pointerId);
@@ -584,12 +890,65 @@ view.addEventListener('pointerleave', (e) => {
 view.addEventListener('pointerup', handlePointerEnd);
 view.addEventListener('pointercancel', handlePointerEnd);
 
+// ---- Turnstile (サーバーごとにセッション1回認証) ----
+const TURNSTILE_SITEKEY = '0x4AAAAAAFUK-QeqeNfUeQNP';
+const proofs = new Map();   // サーバーURL -> 認証トークン (メモリのみ)
+const verifyEl = document.getElementById('verify');
+const verifyMsg = document.getElementById('verifyMsg');
+let tsWidgetId = null;
+let verifyApi = null;
+
+function showVerify(api) {
+  verifyApi = api;
+  verifyMsg.textContent = '';
+  verifyEl.hidden = false;
+  renderTurnstile();
+}
+function hideVerify() { verifyEl.hidden = true; }
+document.getElementById('verifyClose').onclick = hideVerify;
+
+function renderTurnstile() {
+  if (!window.turnstile) {   // api.js 読み込み待ち
+    setTimeout(() => { if (!verifyEl.hidden) renderTurnstile(); }, 200);
+    return;
+  }
+  if (tsWidgetId === null) {
+    tsWidgetId = turnstile.render('#tsBox', {
+      sitekey: TURNSTILE_SITEKEY,
+      action: 'place',
+      callback: onTurnstileToken,
+      'error-callback': (code) => { verifyMsg.textContent = t('verify_failed') + ' [' + code + ']'; return true; },
+      'timeout-callback': () => { verifyMsg.textContent = t('verify_failed') + ' [timeout]'; },
+      'unsupported-callback': () => { verifyMsg.textContent = t('verify_failed') + ' [unsupported]'; }
+    });
+  } else {
+    turnstile.reset(tsWidgetId);   // トークンは1回限りなので再表示時にリセット
+  }
+}
+
+async function onTurnstileToken(token) {
+  const api = verifyApi;
+  try {
+    const r = await fetch(api, {
+      method: 'POST',
+      body: new URLSearchParams({ a: 'verify', 'cf-turnstile-response': token })
+    });
+    const body = (await r.text()).trim();
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + body.slice(0, 80));
+    proofs.set(api, body);
+    hideVerify();
+  } catch (e) {
+    verifyMsg.textContent = t('verify_failed') + ' [' + (e && e.message || 'network') + ']';
+    turnstile.reset(tsWidgetId);
+  }
+}
+
 // パレット生成
 const pal = document.getElementById('pal');
 PAL.forEach((hex, i) => {
   const b = document.createElement('button');
   b.style.background = hex;
-  b.setAttribute('aria-label', '色 ' + (i + 1));
+  b.setAttribute('aria-label', t('color_prefix') + (i + 1));
   b.setAttribute('aria-pressed', i === color);
   b.onclick = () => {
     color = i;
@@ -637,7 +996,7 @@ function connect(apiUrl, seq) {
   const es = new EventSource(`${apiUrl}?a=stream&from=${lastSeq}`);
   currentEventSource = es;
 
-  es.onopen = () => { dot.className = 'on'; status.textContent = 'ライブ'; };
+  es.onopen = () => { dot.className = 'on'; status.textContent = t('status_live'); };
   es.onmessage = (e) => {
     if (e.lastEventId) lastSeq = parseInt(e.lastEventId, 10) || lastSeq;
     for (const p of e.data.split(';')) {
@@ -646,8 +1005,8 @@ function connect(apiUrl, seq) {
     }
   };
   es.onerror = () => {
-    dot.className = ''; status.textContent = '再接続中';
-    if (es.readyState === EventSource.CLOSED && currentEventSource === es) {   // ブラウザが諦めた場合は自前で再接続
+    dot.className = ''; status.textContent = t('status_reconnecting');
+    if (es.readyState === EventSource.CLOSED && currentEventSource === es) {
       setTimeout(() => {
         if (currentEventSource === es) connect(apiUrl, lastSeq);
       }, 2000);
@@ -656,14 +1015,14 @@ function connect(apiUrl, seq) {
 }
 
 async function loadAndConnectServer(apiUrl) {
-  connectChat(apiUrl);   // チャットは盤面の読み込み結果に関係なく接続する
+  connectChat(apiUrl);
   if (currentEventSource) {
     currentEventSource.close();
     currentEventSource = null;
   }
   
   dot.className = '';
-  status.textContent = '接続中...';
+  status.textContent = t('status_connecting');
 
   try {
     const res = await fetch(apiUrl + '?a=board', { cache: 'no-store' });
@@ -672,11 +1031,11 @@ async function loadAndConnectServer(apiUrl) {
     paintBoard(new Uint8Array(await res.arrayBuffer()));
     connect(apiUrl, seq);
   } catch (e) {
-    status.textContent = '接続失敗';
+    status.textContent = t('status_failed');
   }
 }
 
-// ---- チャット (chat.cgi / SSE) ----
+// ---- チャット ----
 const chatEl = document.getElementById('chat');
 const chatLog = document.getElementById('chatLog');
 const chatInput = document.getElementById('chatInput');
@@ -688,7 +1047,6 @@ const chatState = document.getElementById('chatState');
 const chatNameBtn = document.getElementById('chatName');
 const barEl = document.getElementById('bar');
 
-// 下部バーの高さに合わせてチャットパネルの位置を調整
 function updateBarH() {
   document.documentElement.style.setProperty('--bar-h', barEl.offsetHeight + 'px');
 }
@@ -696,21 +1054,61 @@ updateBarH();
 if (window.ResizeObserver) new ResizeObserver(updateBarH).observe(barEl);
 window.addEventListener('resize', updateBarH);
 
-// 名前
+// 名前 (設定モーダル内の入力欄で編集)
 let chatName = '';
 try { chatName = localStorage.getItem('dd_name') || ''; } catch (e) {}
-function renderChatName() { chatNameBtn.textContent = (chatName || '名無し') + ' ✎'; }
-chatNameBtn.onclick = () => {
-  const v = prompt('チャットで表示する名前 (20文字まで):', chatName);
-  if (v === null) return;
-  chatName = v.trim().slice(0, 20);
+const nameInput = document.getElementById('nameInput');
+function renderChatName() {
+  chatNameBtn.textContent = chatName || t('chat_default_name');
+  nameInput.placeholder = t('chat_default_name');
+  if (document.activeElement !== nameInput) nameInput.value = chatName;
+}
+nameInput.addEventListener('input', () => {
+  chatName = nameInput.value.trim().slice(0, 20);
   try { localStorage.setItem('dd_name', chatName); } catch (e) {}
-  renderChatName();
-};
-renderChatName();
+  chatNameBtn.textContent = chatName || t('chat_default_name');
+});
+nameInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); closeSettings(); }
+});
+chatNameBtn.onclick = () => openSettings(nameInput);
+
+// ---- 設定モーダル ----
+const settingsEl = document.getElementById('settings');
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsClose = document.getElementById('settingsClose');
+let settingsReturnFocus = null;
+
+function openSettings(focusEl) {
+  settingsReturnFocus = document.activeElement;
+  settingsEl.hidden = false;
+  (focusEl || settingsClose).focus();
+}
+function closeSettings() {
+  if (settingsEl.hidden) return;
+  settingsEl.hidden = true;
+  serverMsg.textContent = '';
+  if (settingsReturnFocus && settingsReturnFocus.focus) settingsReturnFocus.focus();
+}
+settingsBtn.onclick = () => openSettings();
+settingsClose.onclick = closeSettings;
+
+let downOnBackdrop = false;
+settingsEl.addEventListener('pointerdown', (e) => { downOnBackdrop = e.target === settingsEl; });
+settingsEl.addEventListener('click', (e) => { if (downOnBackdrop && e.target === settingsEl) closeSettings(); });
+settingsEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') { e.preventDefault(); closeSettings(); return; }
+  if (e.key !== 'Tab') return;
+  const f = [...settingsEl.querySelectorAll('button, input, select')]
+    .filter(el => !el.disabled && el.getClientRects().length);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 
 // 開閉 & 未読バッジ
-let chatOpen = window.innerWidth >= 700;   // 広い画面では最初から開く
+let chatOpen = window.innerWidth >= 700;
 let unread = 0;
 function updateBadge() {
   chatBadge.hidden = unread === 0;
@@ -734,26 +1132,26 @@ let chatApi = '';
 let chatES = null;
 let chatTimer = null;
 let chatRetry = 0;
-let chatLive = false;      // 過去ログの受信が終わってから true
+let chatLive = false;
 let lastChatId = 0;
 
 function chatUrlFor(api) { return api.replace(/[^\/]*$/, 'chat.cgi'); }
 
 function addChatMessage(m) {
-  if (!m || !(m.id > lastChatId)) return;   // 再接続時の重複を除外
+  if (!m || !(m.id > lastChatId)) return;
   lastChatId = m.id;
   const atBottom = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 24;
 
   const row = document.createElement('div');
-  const t = document.createElement('span');
+  const tEl = document.createElement('span');
   const d = new Date(m.t * 1000);
-  t.className = 't';
-  t.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  tEl.className = 't';
+  tEl.textContent = pad2(d.getHours()) + ':' + pad2(d.getMinutes());
   const n = document.createElement('b');
-  n.textContent = m.n;               // textContentなのでHTMLは解釈されない
+  n.textContent = m.n || t('chat_default_name');
   const x = document.createElement('span');
   x.textContent = m.m;
-  row.append(t, n, x);
+  row.append(tEl, n, x);
   chatLog.appendChild(row);
   while (chatLog.children.length > 200) chatLog.removeChild(chatLog.firstChild);
 
@@ -781,12 +1179,11 @@ function openChatStream() {
   es.onerror = () => {
     chatDot.className = '';
     if (es.readyState === EventSource.CLOSED && chatES === es) {
-      // ブラウザが諦めた場合(404など)は間隔を空けて自前で再接続
-      chatState.textContent = '接続できません';
+      chatState.textContent = t('chat_cannot_connect');
       const wait = Math.min(30000, 2000 * Math.pow(2, chatRetry++));
       chatTimer = setTimeout(() => { if (chatES === es) openChatStream(); }, wait);
     } else {
-      chatState.textContent = '再接続中';   // サーバー側の接続時間切れ時もここ。すぐ自動再接続される
+      chatState.textContent = t('chat_reconnecting');
     }
   };
 }
@@ -797,7 +1194,7 @@ function connectChat(apiUrl) {
   lastChatId = 0; chatRetry = 0; chatLive = false;
   chatLog.textContent = '';
   unread = 0; updateBadge();
-  chatDot.className = ''; chatState.textContent = '接続中...';
+  chatDot.className = ''; chatState.textContent = t('status_connecting');
   openChatStream();
 }
 
@@ -810,16 +1207,16 @@ async function sendChat() {
   try {
     const r = await fetch(chatApi, {
       method: 'POST',
-      body: new URLSearchParams({ a: 'post', name: chatName, text })
+      body: new URLSearchParams({ a: 'post', name: chatName || t('chat_default_name'), text })
     });
     if (r.ok) {
       chatInput.value = '';
     } else {
       try { msg = (await r.json()).error || ''; } catch (_) {}
-      msg = msg || '送信に失敗しました';
+      msg = msg || t('chat_send_failed');
     }
   } catch (_) {
-    msg = '送信に失敗しました';
+    msg = t('chat_send_failed');
   }
   chatSend.disabled = false;
   if (msg) {
@@ -829,9 +1226,8 @@ async function sendChat() {
   chatInput.focus();
 }
 chatSend.onclick = sendChat;
-chatSend.addEventListener('mousedown', (e) => e.preventDefault());   // 入力欄のフォーカスを維持
+chatSend.addEventListener('mousedown', (e) => e.preventDefault());
 chatInput.addEventListener('keydown', (e) => {
-  // IME変換確定のEnterでは送信しない
   if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
     e.preventDefault();
     sendChat();
